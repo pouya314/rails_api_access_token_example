@@ -1,5 +1,7 @@
 class SongsController < ApplicationController
   before_action :set_song, only: [:show, :edit, :update, :destroy]
+  before_action :restrict_access
+
 
   # GET /songs
   # GET /songs.json
@@ -71,5 +73,12 @@ class SongsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def song_params
       params.require(:song).permit(:name)
+    end
+
+    def restrict_access
+      authenticate_or_request_with_http_token do |token, options|
+        key = ApiKey.find_by_access_token(token)
+        key.present? && (Time.now.utc < key.expires_at.utc)
+      end
     end
 end
